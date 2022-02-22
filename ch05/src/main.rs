@@ -2,7 +2,7 @@ fn main() {
     let mut cpu = Cpu {
         registers: [0; 16],
         memory: [0; 4096],
-        position_in_memory: 0,
+        program_counter: 0,
         stack: [0; 16],
         stack_pointer: 0,
     };
@@ -30,7 +30,7 @@ fn main() {
 
 struct Cpu {
     registers: [u8; 16],
-    position_in_memory: usize,
+    program_counter: usize,
     memory: [u8; 0x1000],
     stack: [u16; 16],
     stack_pointer: usize,
@@ -38,7 +38,7 @@ struct Cpu {
 
 impl Cpu {
     fn read_opcode(&self) -> u16 {
-        let p = self.position_in_memory;
+        let p = self.program_counter;
         let op_byte1 = self.memory[p] as u16;
         let op_byte2 = self.memory[p + 1] as u16;
 
@@ -48,7 +48,7 @@ impl Cpu {
     fn run(&mut self) {
         loop {
             let opcode = self.read_opcode();
-            self.position_in_memory += 2;
+            self.program_counter += 2;
 
             let x = ((opcode & 0x0F00) >> 8) as u8;
             let y = ((opcode & 0x00F0) >> 4) as u8;
@@ -95,20 +95,20 @@ impl Cpu {
 
     fn se(&mut self, vx: u8, kk: u8) {
         if vx == kk {
-            self.position_in_memory += 2;
+            self.program_counter += 2;
         }
     }
 
     /// () SNE Store if Not Equal
     fn sne(&mut self, vx: u8, kk: u8) {
         if vx != kk {
-            self.position_in_memory += 2;
+            self.program_counter += 2;
         }
     }
 
     /// (1nnn) JUMP to `addr`
     fn jmp(&mut self, addr: u16) {
-        self.position_in_memory = addr as usize;
+        self.program_counter = addr as usize;
     }
 
     /// (2nnn) CALL sub-rotine at `addr`
@@ -120,9 +120,9 @@ impl Cpu {
             panic!("Stack overflow!")
         }
 
-        stack[sp] = self.position_in_memory as u16;
+        stack[sp] = self.program_counter as u16;
         self.stack_pointer += 1;
-        self.position_in_memory = addr as usize;
+        self.program_counter = addr as usize;
     }
 
     /// (00ee) RET return from the current sub-routiine
@@ -133,7 +133,7 @@ impl Cpu {
 
         self.stack_pointer -= 1;
         let call_addr = self.stack[self.stack_pointer];
-        self.position_in_memory = call_addr as usize;
+        self.program_counter = call_addr as usize;
     }
 
     /// (7xkk)
