@@ -1,3 +1,15 @@
+// [package]
+// name = "ch08"
+// version = "0.1.0"
+// edition = "2021"
+
+// # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+// [dependencies]
+// clap = "2"
+// rand = "0.6"
+// trust-dns = { version = "0.16", default-features = false }
+
 use std::net::{SocketAddr, UdpSocket};
 use std::time::Duration;
 
