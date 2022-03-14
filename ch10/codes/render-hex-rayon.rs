@@ -1,15 +1,16 @@
-//! cargo r -- $(echo 'Hello, This is Dentaku speaking. Are you free??' | shasum | cut -f1 -d' ')
-
 // [package]
 // name = "ch10"
 // version = "0.1.0"
 // edition = "2021"
-//
-// # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
-//
-// [dependencies]
-// svg = "0.6"
 
+// # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+// [dependencies]
+// rayon = "1"
+// svg = "0.6"
+//! cargo r -- $(echo 'Hello, This is Dentaku speaking. Are you free??' | shasum | cut -f1 -d' ')
+
+use rayon::prelude::*;
 use std::env;
 use svg::node::element::path::{Command, Data, Position};
 use svg::node::element::{Path, Rectangle};
@@ -122,9 +123,10 @@ impl Artist {
 }
 
 fn parse(input: &str) -> Vec<Operation> {
-    let mut steps = Vec::<Operation>::new();
-    for byte in input.bytes() {
-        let step = match byte {
+    input
+        .as_bytes()
+        .par_iter()
+        .map(|byte| match byte {
             b'0' => Home,
             b'1'..=b'9' => {
                 let distance = (byte - 0x30) as isize;
@@ -132,11 +134,9 @@ fn parse(input: &str) -> Vec<Operation> {
             }
             b'a' | b'b' | b'c' => TurnLeft,
             b'd' | b'e' | b'f' => TurnRight,
-            _ => Noop(byte),
-        };
-        steps.push(step)
-    }
-    steps
+            _ => Noop(*byte),
+        })
+        .collect()
 }
 
 fn convert(operations: &[Operation]) -> Vec<Command> {
